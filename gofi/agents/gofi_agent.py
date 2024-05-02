@@ -4,6 +4,8 @@ import random
 import igp2 as ip
 from typing import List
 
+from shapely import Point
+from shapely.ops import split
 import numpy as np
 
 from gofi.ogoal_recognition import OGoalRecognition
@@ -54,16 +56,36 @@ class GOFIAgent(ip.MCTSAgent):
         self._occlusions = occluded_states
 
     def get_occluded_factors(self, observation: ip.Observation) -> List[OccludedFactor]:
-        """ Get a list of all possible occluded factor instantiations. """
+        """ Get a list of all possible occluded factor instantiations.
+        All occluded agents follow a straight line trajectory for 10 seconds.
+        """
         elements = []
         for aid, state in self._occlusions.items():
-            distance = 100.  # Distance to cover from the start position in a straight line
-            duration = 10.  # Duration under which to cover the distance
-            direction = state.velocity / np.linalg.norm(state.velocity)
-            path = np.array([state.position, state.position + distance * direction])
-            velocity = np.array([distance / duration, distance / duration])
             new_agent = ip.TrajectoryAgent(aid, state, open_loop=True, reset_trajectory=False)
-            new_agent.set_trajectory(ip.VelocityTrajectory(path, velocity))
+
+            if state.speed < ip.Stop.STOP_VELOCITY:
+                new_agent.set_trajectory(None, stop_seconds=100.)
+            else:
+                # Get random lane sequence until a road ends or reached lane limit
+                max_lanes = 10
+                current_lane = observation.scenario_map.best_lane_at(state.position, state.heading)
+                lane_sequence = [current_lane]
+                while current_lane is not None and len(lane_sequence) < max_lanes:
+                    next_lane = current_lane.link.successor
+                    if next_lane:
+                        lane_sequence.append(next_lane[0])
+                        current_lane = next_lane[0]
+                    else:
+                        break
+                current_lane_final_p = lane_sequence[0].midline.interpolate(1., normalized=True)
+                path = ip.Maneuver.get_lane_path_midline(lane_sequence)
+                trajectory = None
+                for segment in split(path, Point(state.position)).geoms:
+                    if segment.distance(current_lane_final_p) < 0.01:
+                        trajectory = np.array(segment.coords)
+                        break
+                velocity = np.array([state.speed] * len(trajectory))
+                new_agent.set_trajectory(ip.VelocityTrajectory(trajectory, velocity))
             elements.append(new_agent)
 
         return OccludedFactor.create_all_instantiations(elements)

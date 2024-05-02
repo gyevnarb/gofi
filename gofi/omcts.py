@@ -34,10 +34,10 @@ class OMCTS(ip.MCTS):
             if aid == simulator.ego_id:
                 continue
 
-            goal = agent_predictions.sample_goals_given_factor(occluded_factor)[0]
-            trajectory, plan = agent_predictions.optimal_trajectory_to_goal_with_factor(goal, occluded_factor)
+            agent_goal = agent_predictions.sample_goals_given_factor(occluded_factor)[0]
+            trajectory, plan = agent_predictions.optimal_trajectory_to_goal_with_factor(agent_goal, occluded_factor)
             simulator.update_trajectory(aid, trajectory, plan)
-            samples[aid] = (goal, trajectory, occluded_factor)
+            samples[aid] = (agent_goal, trajectory, occluded_factor)
             logger.debug(f"Agent {aid} sample: {plan}")
 
         tree.set_samples(samples)

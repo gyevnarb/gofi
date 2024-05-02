@@ -16,7 +16,7 @@ class ORollout(ip.Rollout):
                  fps: int = 10,
                  open_loop_agents: bool = False,
                  trajectory_agents: bool = False,
-                 t_max: int = 1000,
+                 t_max: int = 200,
                  occluded_factor: OccludedFactor = None):
         """ Initialise a new rollout with possible occluded factors.
 

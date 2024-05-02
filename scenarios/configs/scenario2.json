@@ -14,7 +14,7 @@
       "spawn": {
         "box": {
           "center": [
-            -55.983870967741936,
+            -60.983870967741936,
             1.9277060067239802
           ],
           "length": 3.5,
@@ -52,7 +52,7 @@
       },
       "mcts": {
         "t_update": 2.0,
-        "n_simulations": 30,
+        "n_simulations": 15,
         "max_depth": 5,
         "store_results": "all",
         "trajectory_agents": false,
@@ -63,7 +63,7 @@
           "curvature": -0.1
         }
       },
-      "view_radius": 100,
+      "view_radius": 200,
       "stop_goals": false
     },
     {
@@ -72,7 +72,7 @@
       "spawn": {
         "box": {
           "center": [
-            -47.58064516129032,
+            -50.58064516129032,
             1.714584235209216
           ],
           "length": 3.5,
@@ -99,11 +99,11 @@
     },
     {
       "id": 2,
-      "type": "TrafficAgent",
+      "type": "OccludedAgent",
       "spawn": {
         "box": {
           "center": [
-            -37.58064516129032,
+            -30.58064516129032,
             1.714584235209216
           ],
           "length": 1.0,
@@ -111,8 +111,8 @@
           "heading": 0.0
         },
         "velocity": [
-          0.01,
-          0.02
+          0.001,
+          0.002
         ]
       },
       "goal": {
@@ -129,7 +129,13 @@
       "macro_actions": [
         {
           "type": "Stop",
-          "stop_duration": 30.0
+          "stop_duration": 100.0
+        }
+      ],
+      "occlusions": [
+        {
+          "start": 0,
+          "end": 40
         }
       ]
     }

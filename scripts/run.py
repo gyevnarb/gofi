@@ -73,13 +73,16 @@ def create_agent(agent_config, scenario_map, frame, fps, args):
     if agent_type == "GOFIAgent":
         agent = gofi.GOFIAgent(**base_agent, **mcts_agent, **agent_config["mcts"])
         rolename = "ego"
-    elif agent_type == "TrafficAgent":
+    elif agent_type in "TrafficAgent":
         if "macro_actions" in agent_config and agent_config["macro_actions"]:
             base_agent["macro_actions"] = to_ma_list(
                 agent_config["macro_actions"], agent_config["id"], frame, scenario_map)
         rolename = agent_config.get("rolename", "car")
         agent = ip.TrafficAgent(**base_agent)
     elif agent_type == "OccludedAgent":
+        if "macro_actions" in agent_config and agent_config["macro_actions"]:
+            base_agent["macro_actions"] = to_ma_list(
+                agent_config["macro_actions"], agent_config["id"], frame, scenario_map)
         agent = gofi.OccludedAgent(occlusions=agent_config["occlusions"], **base_agent)
         rolename = agent_config.get("rolename", "occluded")
     elif agent_type == "Pedestrian":
@@ -111,7 +114,7 @@ def init():
     ip_config.set_properties(**config["scenario"])
 
     xodr_path = config["scenario"]["map_path"]
-    scenario_map = gofi.OMap.parse_from_description(xodr_path, config["objects"])
+    scenario_map = gofi.OMap.parse_from_description(xodr_path, config.get("objects", []))
 
     frame = generate_random_frame(scenario_map, config)
     return args, config, scenario_map, frame
