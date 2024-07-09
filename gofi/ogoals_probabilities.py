@@ -1,5 +1,5 @@
 import random
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 from copy import copy
 import igp2 as ip
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ class OGoalsProbabilities:
                  goals: List[ip.Goal] = None,
                  occluded_factors: List[OccludedFactor] = None,
                  goals_priors: List[float] = None,
-                 occluded_factors_priors: List[float] = None):
+                 occluded_factors_priors: Union[float, List[float]] = None):
         """Creates a new GoalsProbabilities object.
 
         Args:
@@ -24,7 +24,7 @@ class OGoalsProbabilities:
             occluded_factors: list of occluded factor instantiations.
             goals_priors: optionally, a list of goal priors measured from the dataset.
                     If unused, the priors will be set to a uniform distribution.
-            occluded_factors_priors: optionally, a list of occluded factors priors
+            occluded_factors_priors: optionally, a list of occluded factors priors.
         """
         self._goals = goals if goals else []
         self._occluded_factors = occluded_factors if occluded_factors else []
@@ -35,10 +35,16 @@ class OGoalsProbabilities:
         else:
             self._goals_priors = dict(zip(self._goals, goals_priors))
 
-        if occluded_factors_priors is None:
-            self._occluded_factors_priors = dict.fromkeys(self._occluded_factors, 0.1)
-        else:
-            self._occluded_factors_priors = dict(zip(self._occluded_factors, occluded_factors_priors))
+        if occluded_factors_priors is None or isinstance(occluded_factors_priors, float):
+            n_occluded = len([factor for factor in self._occluded_factors if not factor.no_occlusions])
+            n_visible = len(self._occluded_factors) - n_occluded
+            pz = 0.1 if occluded_factors_priors is None else occluded_factors_priors
+            pnz = 1. - pz
+            occluded_factors_priors = [pnz / n_visible if factor.no_occlusions else pz / n_occluded
+                                       for factor in self._occluded_factors]
+
+        assert len(occluded_factors_priors) == len(self._occluded_factors)
+        self._occluded_factors_priors = dict(zip(self._occluded_factors, occluded_factors_priors))
         self._merged_occluded_factors_probabilities = {factor: 0. for factor in self.occluded_factors}
 
         # Actual normalised goal and trajectories probabilities
@@ -82,7 +88,7 @@ class OGoalsProbabilities:
             k: the number of factors to sample.
         """
         factors = self.occluded_factors
-        weights = self.occluded_factors_probabilities.values()
+        weights = self.merged_occluded_factors_probabilities.values()
         return random.choices(factors, weights=weights, k=k)
 
     def sample_goals_given_factor(self, occluded_factor: OccludedFactor, k: int = 1) -> list[ip.Goal]:
@@ -231,3 +237,8 @@ class OGoalsProbabilities:
     def merged_occluded_factors_probabilities(self) -> Dict[OccludedFactor, float]:
         """ Return the merged occluded factor probabilities. """
         return self._merged_occluded_factors_probabilities
+
+    @property
+    def forced_occluded_factors(self) -> List[OccludedFactor]:
+        """ All occluded factors whose probabilities are forced to be 1. """
+        return self._forced_occluded_factors

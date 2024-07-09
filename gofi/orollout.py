@@ -1,7 +1,7 @@
-from typing import Dict
+from typing import Dict, Tuple, List
 
 import igp2 as ip
-from igp2 import Goal, AgentState, GoalsProbabilities
+from igp2 import Goal, AgentState, GoalsProbabilities, StateTrajectory, Agent
 
 from gofi.occluded_factor import OccludedFactor
 from gofi.map.omap import OMap
@@ -32,6 +32,7 @@ class ORollout(ip.Rollout):
             occluded_factor: The occluded factor to consider in the environment.
             """
         super().__init__(ego_id, initial_frame, metadata, scenario_map, fps, open_loop_agents, trajectory_agents, t_max)
+        self._initial_frame_agents = list(initial_frame)
         self._init_occluded_factor = occluded_factor
         self._occluded_factor = occluded_factor
 
@@ -46,3 +47,12 @@ class ORollout(ip.Rollout):
         """ Reset the rollout to its initial state and removes occluded factors from the environment."""
         super().reset()
         self._occluded_factor = self._init_occluded_factor
+        self._agents = {aid: agent for aid, agent in self.agents.items()
+                        if aid in self._initial_frame_agents}
+        self._initial_frame = {aid: state for aid, state in self.initial_frame.items()
+                               if aid in self._initial_frame_agents}
+
+    @property
+    def occluded_factor(self) -> OccludedFactor:
+        """ Return the current occluded factor in the rollout. """
+        return self._occluded_factor

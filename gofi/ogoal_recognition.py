@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 import igp2 as ip
 
 from gofi.ogoals_probabilities import OGoalsProbabilities
+from gofi.occluded_factor import OccludedFactor
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class OGoalRecognition(ip.GoalRecognition):
                          kwargs.get("n_trajectories", 1),
                          kwargs.get("beta", 1.),
                          kwargs.get("gamma", 1.),
-                         kwargs.get("reward_as_difference", True))
+                         kwargs.get("reward_as_difference", False))
 
     def update_goals_probabilities(self,
                                    goals_probabilities: OGoalsProbabilities,
@@ -49,7 +50,8 @@ class OGoalRecognition(ip.GoalRecognition):
                                    frame_ini: Dict[int, ip.AgentState],
                                    frame: Dict[int, ip.AgentState],
                                    visible_region: ip.Circle = None,
-                                   debug: bool = False) -> OGoalsProbabilities:
+                                   debug: bool = False) \
+            -> OGoalsProbabilities:
         """Updates the goal probabilities, and stores relevant information
         in the occluded GoalsProbabilities object.
 
@@ -134,14 +136,18 @@ class OGoalRecognition(ip.GoalRecognition):
                     likelihood = 0.
                     goals_probabilities.current_trajectory[key] = None
 
-                logger.debug(goals_probabilities.trajectories_probabilities[key])
+                occluded_factors_prior = goals_probabilities.occluded_factors_priors[factor]
+                if factor.force_visible:
+                    occluded_factors_prior = 1.
+                elif factor.force_invisible:
+                    occluded_factors_prior = 0.
 
                 # update goal probabilities
                 goals_probabilities.likelihood[key] = likelihood
                 goals_probabilities.goals_probabilities[key] = \
                     likelihood * \
                     goals_probabilities.goals_priors[goal] * \
-                    goals_probabilities.occluded_factors_priors[factor]
+                    occluded_factors_prior
                 factor_goal_sum += goals_probabilities.goals_probabilities[key]
 
             goals_probabilities.occluded_factors_probabilities[factor] = factor_goal_sum
@@ -154,7 +160,7 @@ class OGoalRecognition(ip.GoalRecognition):
                 goals_probabilities.occluded_factors_probabilities[factor] = pz / norm_factor
                 for key, pg_z in goals_probabilities.goals_probabilities.items():
                     if key[1] == factor:
-                        goals_probabilities.goals_probabilities[key] = pg_z / pz
+                        goals_probabilities.goals_probabilities[key] = pg_z / pz if pz != 0. else 0.
             except ZeroDivisionError:
                 logger.debug("All factors impossible. Setting probabilities to 0.")
 

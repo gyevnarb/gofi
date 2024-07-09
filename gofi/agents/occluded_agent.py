@@ -20,7 +20,7 @@ class OccludedAgent(ip.TrafficAgent):
 
     def is_occluded(self, t: int) -> bool:
         """ Check if the agent is occluded at the given time step. """
-        return any(occlusion["start"] <= t <= occlusion["end"] for occlusion in self._occlusions)
+        return any(occlusion["start"] <= t < occlusion["end"] for occlusion in self._occlusions)
 
     @property
     def occlusions(self) -> list[dict[str, float]]:

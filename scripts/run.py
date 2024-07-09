@@ -49,10 +49,12 @@ def run_simple_simulation(frame, scenario_map, args, config):
         plt.show()
 
     for t in range(config["scenario"]["max_steps"]):
-        simulation.step()
+        alive = simulation.step()
         if args.plot is not None and t % args.plot == 0:
             ip.simplesim.plot_simulation(simulation, debug=False, map_plotter=gofi.plot_map)
             plt.show()
+        if not alive:
+            return simulation, False
     return simulation, True
 
 
@@ -112,6 +114,7 @@ def init():
 
     ip_config = Configuration()
     ip_config.set_properties(**config["scenario"])
+    ip.WaypointManeuver.ACC_ARGS["s_0"] = 3.0
 
     xodr_path = config["scenario"]["map_path"]
     scenario_map = gofi.OMap.parse_from_description(xodr_path, config.get("objects", []))

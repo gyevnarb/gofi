@@ -33,6 +33,9 @@ class GOFIAgent(ip.MCTSAgent):
         self._belief_merging_order = kwargs.get("belief_merging_order", "increasing_id")
         self._occlusions = {}
 
+        self._occluded_factors_prior = kwargs["goal_recognition"].get("occluded_factors_prior", 0.1)
+        self._forced_visible_agents = None
+
         self._goal_recognition = OGoalRecognition(
             astar=self._astar,
             smoother=self._smoother,
@@ -55,9 +58,13 @@ class GOFIAgent(ip.MCTSAgent):
         """ Store the states of agents that are occluded from this agent. """
         self._occlusions = occluded_states
 
+    def force_visible_agents(self, agent_ids: List[int]):
+        """ Force the occluded factors to be used in the goal recognition. """
+        self._forced_visible_agents = agent_ids
+
     def get_occluded_factors(self, observation: ip.Observation) -> List[OccludedFactor]:
         """ Get a list of all possible occluded factor instantiations.
-        All occluded agents follow a straight line trajectory for 10 seconds.
+        All occluded agents follow their current lane until its end.
         """
         elements = []
         for aid, state in self._occlusions.items():
@@ -77,9 +84,12 @@ class GOFIAgent(ip.MCTSAgent):
                         current_lane = next_lane[0]
                     else:
                         break
+
+                # Get path trajectory
                 current_lane_final_p = lane_sequence[0].midline.interpolate(1., normalized=True)
                 path = ip.Maneuver.get_lane_path_midline(lane_sequence)
                 trajectory = None
+                # Find which starting segment to use for path trajectory
                 for segment in split(path, Point(state.position)).geoms:
                     if segment.distance(current_lane_final_p) < 0.01:
                         trajectory = np.array(segment.coords)
@@ -88,7 +98,7 @@ class GOFIAgent(ip.MCTSAgent):
                 new_agent.set_trajectory(ip.VelocityTrajectory(trajectory, velocity))
             elements.append(new_agent)
 
-        return OccludedFactor.create_all_instantiations(elements)
+        return OccludedFactor.create_all_instantiations(elements, self._forced_visible_agents)
 
     def update_plan(self, observation: ip.Observation):
         frame = observation.frame
@@ -96,11 +106,13 @@ class GOFIAgent(ip.MCTSAgent):
         occluded_factors = self.get_occluded_factors(observation)
         visible_region = ip.Circle(frame[self.agent_id].position, self.view_radius)
 
-        self._goal_probabilities = {aid: OGoalsProbabilities(self._goals, occluded_factors)
-                                    for aid in frame.keys() if aid != self.agent_id}
+        self._goal_probabilities = \
+            {aid: OGoalsProbabilities(self._goals, occluded_factors,
+                                      occluded_factors_priors=self._occluded_factors_prior)
+             for aid in frame.keys() if aid != self.agent_id}
 
         if self._belief_merging_order == "increasing_id":
-            id_order = self._belief_merging_order = sorted(self._goal_probabilities)
+            id_order = sorted(self._goal_probabilities)
         elif self._belief_merging_order == "random":
             id_order = random.sample(list(self._goal_probabilities), len(self._goal_probabilities))
         elif isinstance(self._belief_merging_order, list):
@@ -110,7 +122,7 @@ class GOFIAgent(ip.MCTSAgent):
 
         previous_agent_id = None
         for agent_id in id_order:
-            # No need to recongise our own goals
+            # No need to recognise our own goals
             if agent_id == self.agent_id:
                 continue
 

@@ -5,6 +5,7 @@ import igp2 as ip
 import logging
 from igp2 import Tree
 
+import matplotlib.pyplot as plt
 from gofi.ogoals_probabilities import OGoalsProbabilities
 from gofi.occluded_factor import OccludedFactor
 from gofi.orollout import ORollout
@@ -21,11 +22,10 @@ class OMCTS(ip.MCTS):
         occluded_factor = None
 
         # 3. Sample occluded factor instantiation
-        if occluded_factor is None:
-            for aid, agent_predictions in predictions.items():
-                occluded_factor = agent_predictions.sample_occluded_factor()[0]
-                simulator.set_occluded_factor(occluded_factor)
-                break
+        for aid, agent_predictions in predictions.items():
+            occluded_factor = agent_predictions.sample_occluded_factor()[0]
+            simulator.set_occluded_factor(occluded_factor)
+            break
         logger.debug(f"Occluded factor: {occluded_factor.present_elements}")
 
         # 4-6. Sample goal and trajectory
@@ -42,6 +42,7 @@ class OMCTS(ip.MCTS):
 
         tree.set_samples(samples)
         final_key = self._run_simulation(agent_id, goal, tree, simulator, debug)
+        logger.debug(f"Final key: {final_key}")
 
         if self.store_results == "all":
             logger.debug(f"Storing MCTS search results for iteration {k}.")

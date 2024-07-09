@@ -1,8 +1,7 @@
 import logging
 
-from shapely import LineString, Polygon
-
 import igp2 as ip
+from gofi.agents.occluded_agent import OccludedAgent
 
 
 logger = logging.getLogger(__name__)
@@ -18,13 +17,15 @@ class OSimulation(ip.simplesim.Simulation):
             agent_id: the id of the agent for which to generate the observation
         """
         if agent_id == 0:
-            occluded_ids = [aid for aid, agent in self.agents.items()
-                            if hasattr(agent, "is_occluded") and agent.is_occluded(self.t)]
+            occluded_ids = [aid for aid, agent in self.agents.items() if isinstance(agent, OccludedAgent)]
             remove_occluded = {aid: state for aid, state in self.state.items() if aid not in occluded_ids}
+            force_visible = [aid for aid, agent in self.agents.items() if isinstance(agent, OccludedAgent) and
+                             not agent.is_occluded(self.t)]
 
             # Set the occluded state for each agent for the ego
             self.agents[agent_id].set_occluded_states(
                 {aid: state for aid, state in self.state.items() if aid in occluded_ids})
+            self.agents[agent_id].force_visible_agents(force_visible)
 
             return ip.Observation(remove_occluded, self.scenario_map)
         else:
