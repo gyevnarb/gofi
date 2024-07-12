@@ -59,11 +59,6 @@ class OMCTS(ip.MCTS):
             mcts_result = ip.MCTSResult(deepcopy(tree), samples, final_key)
             self.results.add_data(mcts_result)
 
-    def sample_occluded_factor(self, predictions: Dict[int, OGoalsProbabilities]) -> OccludedFactor:
-        """ Sample an occluded factor from the predictions. """
-        for aid, agent_predictions in predictions.items():
-            return agent_predictions.sample_occluded_factor()[0]
-
     def reset(self):
         """ Reset OMCTS by calling super and removing the pre-existing occluded factor."""
         super().reset()
