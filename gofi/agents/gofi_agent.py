@@ -13,6 +13,7 @@ from gofi.occluded_factor import OccludedFactor
 from gofi.ogoals_probabilities import OGoalsProbabilities
 from gofi.omcts import OMCTS
 from gofi.orollout import ORollout
+from gofi.otree import OTree
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class GOFIAgent(ip.MCTSAgent):
     """ An MCTS-based planning agent that takes occlusions into account as well. """
     OCCLUSION_AREA_THRESHOLD = 15.
 
-    def __init__(self, **kwargs):
+    def __init__(self, occluded_factors_prior: float = 0.1, **kwargs):
         """Initialises a new GOFIAgent.
 
         Keyword Args:
@@ -33,7 +34,7 @@ class GOFIAgent(ip.MCTSAgent):
         self._belief_merging_order = kwargs.get("belief_merging_order", "increasing_id")
         self._occlusions = {}
 
-        self._occluded_factors_prior = kwargs["goal_recognition"].get("occluded_factors_prior", 0.1)
+        self._occluded_factors_prior = occluded_factors_prior
         self._forced_visible_agents = None
 
         self._goal_recognition = OGoalRecognition(
@@ -49,7 +50,8 @@ class GOFIAgent(ip.MCTSAgent):
                            max_depth=kwargs.get("max_depth", 5),
                            store_results=kwargs.get("store_results", "final"),
                            trajectory_agents=kwargs.get("trajectory_agents", True),
-                           rollout_type=ORollout)
+                           rollout_type=ORollout,
+                           tree_type=OTree)
 
     def __repr__(self):
         return f"GOFIAgent(ID={self.agent_id})"

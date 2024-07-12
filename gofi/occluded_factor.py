@@ -79,7 +79,6 @@ class OccludedFactor:
             else:
                 ret = []
                 forced_ids_idx = [i for i, a in enumerate(elements) if a.agent_id in forced_visible_agents]
-                nonforced_ids_idx = [i for i, a in enumerate(elements) if a.agent_id not in forced_visible_agents]
                 for presences in presences_product:
                     # Force visible if all forced agents are present
                     if all(presences[i] for i in forced_ids_idx):

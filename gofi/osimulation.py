@@ -22,9 +22,10 @@ class OSimulation(ip.simplesim.Simulation):
             force_visible = [aid for aid, agent in self.agents.items() if isinstance(agent, OccludedAgent) and
                              not agent.is_occluded(self.t)]
 
-            # Set the occluded state for each agent for the ego
-            self.agents[agent_id].set_occluded_states(
-                {aid: state for aid, state in self.state.items() if aid in occluded_ids})
+            # Set the occluded state for each agent for the ego at the start of the simulation
+            if self.t == 0:
+                self.agents[agent_id].set_occluded_states(
+                    {aid: state for aid, state in self.state.items() if aid in occluded_ids})
             self.agents[agent_id].force_visible_agents(force_visible)
 
             return ip.Observation(remove_occluded, self.scenario_map)

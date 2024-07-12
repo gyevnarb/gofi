@@ -1,11 +1,10 @@
 {
   "scenario": {
     "map_path": "scenarios\\maps\\scenario3.xodr",
-    "max_speed": 15.0,
+    "max_speed": 10.0,
     "fps": 20,
     "seed": 42,
-    "max_steps": 1000,
-    "n_traffic": 5
+    "max_steps": 1000
   },
   "objects": [
     {
@@ -26,7 +25,7 @@
         "box": {
           "center": [
             1.75,
-            -30
+            -40
           ],
           "length": 3.5,
           "width": 3.5,
@@ -41,7 +40,7 @@
         "box": {
           "center": [
             92.4193548387097,
-            1.828793290043265
+            -1.758793290043265
           ],
           "length": 3.5,
           "width": 3.5,
@@ -49,21 +48,23 @@
         }
       },
       "velocity_smoother": {},
-      "goal_recognition": {},
+      "goal_recognition": {
+        "beta": 1.0
+      },
       "cost_factors": {
         "time": 1.0,
         "velocity": 0.0,
-        "acceleration": 0.0,
+        "acceleration": 1.5,
         "jerk": 1.0,
-        "heading": 1.0,
+        "heading": 0.0,
         "angular_velocity": 1.0,
         "angular_acceleration": 0.0,
         "curvature": 0.0,
         "safety": 0.0
       },
       "mcts": {
-        "t_update": 2.0,
-        "n_simulations": 30,
+        "t_update": 1.0,
+        "n_simulations": 15,
         "max_depth": 5,
         "store_results": "all",
         "trajectory_agents": false,
@@ -75,7 +76,8 @@
         }
       },
       "view_radius": 200,
-      "stop_goals": false
+      "stop_goals": false,
+      "occluded_factors_prior": 0.2
     },
     {
       "id": 1,
@@ -83,7 +85,7 @@
       "spawn": {
         "box": {
           "center": [
-            30.58064516129032,
+            15.58064516129032,
             1.714584235209216
           ],
           "length": 3.5,
@@ -91,8 +93,8 @@
           "heading": 0.0
         },
         "velocity": [
-          9.0,
-          10.0
+          6.0,
+          7.0
         ]
       },
       "goal": {
@@ -114,7 +116,7 @@
       "spawn": {
         "box": {
           "center": [
-            -40.58064516129032,
+            -50.58064516129032,
             -1.714584235209216
           ],
           "length": 3.5,
@@ -130,7 +132,7 @@
         "box": {
           "center": [
             91.61290322580649,
-            1.600375180375167
+            -1.600375180375167
           ],
           "length": 3.5,
           "width": 3.5,
@@ -140,7 +142,7 @@
       "occlusions": [
         {
           "start": 0,
-          "end": 60
+          "end": 100
         }
       ]
     }

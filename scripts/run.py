@@ -68,7 +68,8 @@ def create_agent(agent_config, scenario_map, frame, fps, args):
                   "kinematic": not args.carla,
                   "velocity_smoother": agent_config.get("velocity_smoother", None),
                   "goal_recognition": agent_config.get("goal_recognition", None),
-                  "stop_goals": agent_config.get("stop_goals", False)}
+                  "stop_goals": agent_config.get("stop_goals", False),
+                  "occluded_factors_prior": agent_config.get("occluded_factors_prior", 0.1)}
 
     agent_type = agent_config["type"]
 

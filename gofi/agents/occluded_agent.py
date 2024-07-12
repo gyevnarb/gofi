@@ -15,8 +15,11 @@ class OccludedAgent(ip.TrafficAgent):
         super().__init__(agent_id, initial_state, goal, fps, macro_actions)
         self._occlusions = occlusions
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"OccludedAgent(ID={self.agent_id})"
+
+    def __str__(self) -> str:
+        return self.__repr__()
 
     def is_occluded(self, t: int) -> bool:
         """ Check if the agent is occluded at the given time step. """

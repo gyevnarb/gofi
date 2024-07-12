@@ -68,6 +68,7 @@ class OGoalRecognition(ip.GoalRecognition):
         current_lane = self._scenario_map.best_lane_at(frame[agent_id].position, frame[agent_id].heading)
         logger.info(f"Agent ID {agent_id} occluded goal recognition:")
         for factor in goals_probabilities.occluded_factors_probabilities:
+            logger.debug(f"Factor {factor}:")
             factor_goal_sum = 0.
             oframe_ini = factor.update_frame(frame_ini)
             oframe = factor.update_frame(frame)
@@ -76,14 +77,14 @@ class OGoalRecognition(ip.GoalRecognition):
                 try:
                     logger.info(f"Recognition for {factor} and {goal}")
                     if goal.reached(frame_ini[agent_id].position) and not isinstance(goal, ip.StoppingGoal):
-                        raise RuntimeError(f"Agent {agent_id} reached goal at start.")
+                        raise RuntimeError(f"\tAgent {agent_id} reached goal at start.")
 
                     # Check if goal is not blocked by stopped vehicle
                     self._check_blocked(agent_id, current_lane, frame, goal)
 
                     # 4. and 5. Generate optimum trajectory from initial point and smooth it
                     if goals_probabilities.optimum_trajectory[key] is None:
-                        logger.debug("Generating optimum trajectory")
+                        logger.debug("\tGenerating optimum trajectory")
                         trajectories, plans = self._generate_trajectory(
                             1, agent_id, oframe_ini, goal,
                             state_trajectory=None, visible_region=visible_region, debug=debug)
@@ -93,14 +94,14 @@ class OGoalRecognition(ip.GoalRecognition):
                     opt_trajectory = goals_probabilities.optimum_trajectory[key]
 
                     # 7. and 8. Generate optimum trajectory from last observed point and smooth it
-                    logger.debug(f"Generating trajectory from current time step")
+                    logger.debug(f"\tGenerating trajectory from current time step")
                     all_trajectories, all_plans = self._generate_trajectory(
                         self._n_trajectories, agent_id, oframe, goal, observed_trajectory,
                         visible_region=visible_region, debug=debug)
 
                     # 6. Calculate optimum reward
                     goals_probabilities.optimum_reward[key] = self._reward(opt_trajectory, goal)
-                    logger.debug(f"Optimum costs: {self._cost.cost_components}")
+                    logger.debug(f"\tOptimum costs: {self._cost.cost_components}")
 
                     # For each generated possible trajectory to this goal
                     for i, trajectory in enumerate(all_trajectories):
@@ -109,7 +110,7 @@ class OGoalRecognition(ip.GoalRecognition):
 
                         # 9,10. calculate rewards, likelihood
                         reward = self._reward(trajectory, goal)
-                        logger.debug(f"T{i} costs: {self._cost.cost_components}")
+                        logger.debug(f"\tT{i} costs: {self._cost.cost_components}")
                         goals_probabilities.all_rewards[key].append(reward)
 
                         reward_diff = self._reward_difference(opt_trajectory, trajectory, goal)
@@ -160,11 +161,19 @@ class OGoalRecognition(ip.GoalRecognition):
                 goals_probabilities.occluded_factors_probabilities[factor] = pz / norm_factor
                 for key, pg_z in goals_probabilities.goals_probabilities.items():
                     if key[1] == factor:
-                        goals_probabilities.goals_probabilities[key] = pg_z / pz if pz != 0. else 0.
+                        pgz = pg_z / pz if pz != 0. else goals_probabilities.goals_priors[key[0]]
+                        goals_probabilities.goals_probabilities[key] = pgz
             except ZeroDivisionError:
-                logger.debug("All factors impossible. Setting probabilities to 0.")
+                logger.debug("\tAll factors impossible. Setting probabilities to 0.")
 
         logger.debug(f"")
-        logger.debug({k: v for k, v in goals_probabilities.goals_probabilities.items() if v != 0.})
+        logger.info("Final goals probabilities:")
+        for factor, pz in goals_probabilities.occluded_factors_probabilities.items():
+            logger.info(f"{factor}: {np.round(pz, 3)}")
+            for key, pg_z in goals_probabilities.goals_probabilities.items():
+                if pg_z != 0. and key[1] == factor:
+                    logger.info(f"\t{key[0]}: {np.round(pg_z, 3)}")
+        # logger.info()
+        # logger.debug({k: v for k, v in goals_probabilities.goals_probabilities.items() if v != 0.})
 
         return goals_probabilities
