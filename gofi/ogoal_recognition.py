@@ -75,7 +75,7 @@ class OGoalRecognition(ip.GoalRecognition):
             for goal in goals_probabilities.goals_priors:
                 key = (goal, factor)
                 try:
-                    logger.info(f"Recognition for {factor} and {goal}")
+                    logger.info(f"  Recognition for {factor} and {goal}")
                     if goal.reached(frame_ini[agent_id].position) and not isinstance(goal, ip.StoppingGoal):
                         raise RuntimeError(f"\tAgent {agent_id} reached goal at start.")
 

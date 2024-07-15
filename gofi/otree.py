@@ -41,7 +41,8 @@ class OTree(ip.Tree):
             idx = self.root.actions.index(action)
             self.root.action_visits[idx] += 1
         else:
-            # If there is an occlusion, use action policy to select branch
+            # If there is an occlusion, use action policy to select branch. This will sometimes result in
+            #  a rollout where the occluded factor is present but we intentionally hide it from the ego.
             action = self.select_action(self.root)
         key = ("Super", str(action))
 

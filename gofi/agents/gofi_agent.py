@@ -70,7 +70,7 @@ class GOFIAgent(ip.MCTSAgent):
         """
         elements = []
         for aid, state in self._occlusions.items():
-            new_agent = ip.TrajectoryAgent(aid, state, open_loop=True, reset_trajectory=False)
+            new_agent = ip.TrajectoryAgent(aid, state, open_loop=True, reset_trajectory=False, fps=self._mcts.fps)
 
             if state.speed < ip.Stop.STOP_VELOCITY:
                 new_agent.set_trajectory(None, stop_seconds=100.)
