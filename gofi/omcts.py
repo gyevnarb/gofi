@@ -20,8 +20,14 @@ class OMCTS(ip.MCTS):
         self._current_occluded_factor = None
         self._hide_occluded = False
 
-    def _rollout(self, k: int, agent_id: int, goal: ip.Goal, tree: OTree,
-                 simulator: ORollout, debug: bool, predictions: Dict[int, OGoalsProbabilities]):
+    def _rollout(self,
+                 k: int,
+                 agent_id: int,
+                 goal: ip.Goal,
+                 tree: OTree,
+                 simulator: ORollout,
+                 debug: bool,
+                 predictions: Dict[int, OGoalsProbabilities]):
         """ Run a single rollout of the MCTS search with occluded factors and store results. """
         occluded_factor = None
 
@@ -29,6 +35,12 @@ class OMCTS(ip.MCTS):
         for aid, agent_predictions in predictions.items():
             occluded_factor = agent_predictions.sample_occluded_factor()[0]
             simulator.set_occluded_factor(occluded_factor)
+
+            # Set the start time of the occluded factor to account for different FPSs
+            for element in occluded_factor.present_elements:
+                if isinstance(element, ip.TrajectoryAgent):
+                    element.set_start_time(int(tree.root.state[0].time * simulator.fps / self.env_fps))
+
             self._hide_occluded = tree.set_occlusions(occluded_factor)
             if self._hide_occluded:
                 # If an occluded factor is present sometimes we want to pretend it is not there to
