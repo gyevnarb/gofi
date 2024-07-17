@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 def main():
     args, config, scenario_map, frame = init()
 
+    # ma_conf = ip.MacroActionConfig({
+    #     "type": "Exit",
+    #     "turn_target": np.array([6, -1.75])
+    # })
+    # ip.MacroActionFactory().create(ma_conf, 1, frame, scenario_map)
+
     if args.plot_map_only:
         gofi.plot_map(scenario_map, hide_road_bounds_in_junction=True, markings=True)
         for aid, state in frame.items():
