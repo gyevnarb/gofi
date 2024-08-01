@@ -62,9 +62,9 @@ class OccludedFactor:
     @classmethod
     def create_all_instantiations(
             cls,
-            elements: list[ip.Agent],
+            elements: List[ip.Agent],
             forced_visible_agents: List[int] = None
-    ) -> list["OccludedFactor"]:
+    ) -> List["OccludedFactor"]:
         """ Creates a list of factors with all combination of occluded element instantiations.
         Note, this function creates and array of size 2^len(elements)!
 
@@ -92,12 +92,12 @@ class OccludedFactor:
             return [OccludedFactor([None], [False])]  # Empty factor if no elements present
 
     @property
-    def elements(self) -> list[ip.Agent]:
+    def elements(self) -> List[ip.Agent]:
         """ Returns the list of occluded elements in the environment. """
         return self.__elements
 
     @property
-    def presence(self) -> list[bool]:
+    def presence(self) -> List[bool]:
         """ Returns whether each occluded element in the factor is currently present or not. """
         return self.__presence
 
@@ -107,7 +107,7 @@ class OccludedFactor:
         return self.__presence is None or not any(self.__presence)
 
     @property
-    def present_elements(self) -> list[ip.Agent]:
+    def present_elements(self) -> List[ip.Agent]:
         """ Returns the list of occluded elements that are currently present in the environment. """
         return [agent for agent, present in zip(self.__elements, self.__presence) if present]
 

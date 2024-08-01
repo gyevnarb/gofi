@@ -1,7 +1,7 @@
-from typing import Dict, Tuple, List
+from typing import Dict
 
 import igp2 as ip
-from igp2 import Goal, AgentState, GoalsProbabilities, StateTrajectory, Agent, Observation
+from igp2 import AgentState, Observation
 
 from gofi.occluded_factor import OccludedFactor
 from gofi.map.omap import OMap
@@ -10,8 +10,8 @@ from gofi.map.omap import OMap
 class ORollout(ip.Rollout):
     def __init__(self,
                  ego_id: int,
-                 initial_frame: dict[int, ip.AgentState],
-                 metadata: dict[int, ip.AgentMetadata],
+                 initial_frame: Dict[int, ip.AgentState],
+                 metadata: Dict[int, ip.AgentMetadata],
                  scenario_map: OMap,
                  fps: int = 10,
                  open_loop_agents: bool = False,

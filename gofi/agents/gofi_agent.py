@@ -2,18 +2,18 @@ import logging
 import random
 
 import igp2 as ip
-from typing import List
+from typing import List, Dict
 
 from shapely import Point
 from shapely.ops import split
 import numpy as np
 
-from gofi.ogoal_recognition import OGoalRecognition
+from gofi.recognition.ogoal_recognition import OGoalRecognition
 from gofi.occluded_factor import OccludedFactor
-from gofi.ogoals_probabilities import OGoalsProbabilities
-from gofi.omcts import OMCTS
-from gofi.orollout import ORollout
-from gofi.otree import OTree
+from gofi.recognition.ogoals_probabilities import OGoalsProbabilities
+from gofi.planning.omcts import OMCTS
+from gofi.planning.orollout import ORollout
+from gofi.planning.otree import OTree
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class GOFIAgent(ip.MCTSAgent):
     def __repr__(self):
         return f"GOFIAgent(ID={self.agent_id})"
 
-    def set_occluded_states(self, occluded_states: dict[int, ip.AgentState]):
+    def set_occluded_states(self, occluded_states: Dict[int, ip.AgentState]):
         """ Store the states of agents that are occluded from this agent. """
         self._occlusions = occluded_states
 

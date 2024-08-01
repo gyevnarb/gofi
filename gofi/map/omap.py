@@ -1,3 +1,5 @@
+from typing import List
+
 import igp2 as ip
 import logging
 
@@ -7,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class OMap(ip.Map):
-    def __init__(self, opendrive: ip.opendrive.OpenDrive = None, objects: list[StaticObject] = None):
+    def __init__(self, opendrive: ip.opendrive.OpenDrive = None, objects: List[StaticObject] = None):
         """ Create a map object given a parsed OpenDrive file and static object descriptions
 
         Args:
@@ -18,7 +20,7 @@ class OMap(ip.Map):
         self.__objects = objects
 
     @classmethod
-    def parse_from_description(cls, file_path: str, static_objects: list[dict]):
+    def parse_from_description(cls, file_path: str, static_objects: List[dict]):
         """ Parse the OpenDrive file and create a new Map instance
 
         Args:
@@ -33,11 +35,11 @@ class OMap(ip.Map):
         return new_map
 
     @property
-    def objects(self) -> list[StaticObject]:
+    def objects(self) -> List[StaticObject]:
         """ Retrieve all objects in the map. """
         return self.__objects
 
     @property
-    def buildings(self) -> list[StaticObject]:
+    def buildings(self) -> List[StaticObject]:
         """ Return all buildings in the environment. """
         return [obj for obj in self.__objects if obj.object_type == "building"]

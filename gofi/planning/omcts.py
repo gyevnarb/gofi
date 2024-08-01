@@ -3,12 +3,12 @@ from copy import deepcopy
 
 import igp2 as ip
 import logging
-from igp2 import Tree, MCTSAction
+from igp2 import MCTSAction
 
-from gofi.otree import OTree
-from gofi.ogoals_probabilities import OGoalsProbabilities
-from gofi.occluded_factor import OccludedFactor
-from gofi.orollout import ORollout
+from gofi.planning.otree import OTree
+from gofi.recognition.ogoals_probabilities import OGoalsProbabilities
+from gofi.planning.orollout import ORollout
+from gofi.omcts_results import OMCTSResult, AllOMCTSResults
 
 logger = logging.getLogger(__name__)
 
@@ -62,14 +62,32 @@ class OMCTS(ip.MCTS):
             samples[aid] = (agent_goal, trajectory, occluded_factor)
             logger.debug(f"Agent {aid} sample: {plan}")
 
-        tree.set_samples(samples)
         final_key = self._run_simulation(agent_id, goal, tree, simulator, debug)
         logger.debug(f"Final key: {final_key}")
 
         if self.store_results == "all":
             logger.debug(f"Storing MCTS search results for iteration {k}.")
-            mcts_result = ip.MCTSResult(deepcopy(tree), samples, final_key)
+            mcts_result = OMCTSResult(deepcopy(tree), samples, final_key, occluded_factor)
             self.results.add_data(mcts_result)
+
+    def _reset_results(self):
+        """ Resets the stored results in the OMCTS instance."""
+        if self.store_results is None:
+            self.results = None
+        elif self.store_results == 'final':
+            self.results = OMCTSResult()
+        elif self.store_results == 'all':
+            self.results = AllOMCTSResults()
+
+    def _create_tree(self,
+                     agent_id: int,
+                     frame: Dict[int, ip.AgentState],
+                     goal: ip.Goal,
+                     predictions: Dict[int, OGoalsProbabilities]):
+        """ Creates a new MCTS tree to store results. """
+        root = self._create_node(self.to_key(None), agent_id, frame, goal)
+        tree = OTree(root, occluded_factors=list(predictions.values())[0].occluded_factors)
+        return tree
 
     def reset(self):
         """ Reset OMCTS by calling super and removing the pre-existing occluded factor."""

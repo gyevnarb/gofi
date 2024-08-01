@@ -16,12 +16,6 @@ logger = logging.getLogger(__name__)
 def main():
     args, config, scenario_map, frame = init()
 
-    # ma_conf = ip.MacroActionConfig({
-    #     "type": "Exit",
-    #     "turn_target": np.array([6, -1.75])
-    # })
-    # ip.MacroActionFactory().create(ma_conf, 1, frame, scenario_map)
-
     if args.plot_map_only:
         gofi.plot_map(scenario_map, hide_road_bounds_in_junction=True, markings=True)
         for aid, state in frame.items():
@@ -94,9 +88,6 @@ def create_agent(agent_config, scenario_map, frame, fps, args):
                 agent_config["macro_actions"], agent_config["id"], frame, scenario_map)
         agent = gofi.OccludedAgent(occlusions=agent_config["occlusions"], **base_agent)
         rolename = agent_config.get("rolename", "occluded")
-    elif agent_type == "Pedestrian":
-        agent = gofi.Pedestrian(occlusions=agent_config["occlusions"], **base_agent)
-        rolename = agent_config.get("rolename", "pedestrian")
     elif agent_type == "StaticObject":
         agent = gofi.StaticObject(**base_agent)
         rolename = agent_config.get("rolename", "object")

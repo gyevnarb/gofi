@@ -1,9 +1,11 @@
-from typing import List, Dict, Tuple
-import copy
+from typing import List, Tuple
+import logging
 
 import igp2 as ip
+
 from gofi.occluded_factor import OccludedFactor
-from gofi.ogoals_probabilities import OGoalsProbabilities
+
+logger = logging.getLogger(__name__)
 
 
 class OTree(ip.Tree):
@@ -15,11 +17,13 @@ class OTree(ip.Tree):
                  root: ip.Node,
                  action_policy: ip.Policy = None,
                  plan_policy: ip.Policy = None,
-                 predictions: Dict[int, OGoalsProbabilities] = None):
+                 occluded_factors: List[OccludedFactor] = None):
         """ Create a super node to manage different driving behaviours based on occlusions. """
-        super().__init__(root, action_policy, plan_policy, predictions)
-        actions = ["Root" if of.no_occlusions else of
-                   for of in list(predictions.values())[0].occluded_factors]
+        super().__init__(root, action_policy, plan_policy)
+
+        assert occluded_factors is not None, "Occluded factors must be provided. Else use a regular Tree."
+
+        actions = ["Root" if of.no_occlusions else of for of in occluded_factors]
         super_root = ip.Node(("Super",), self._root.state.copy(), actions)
         super_root.expand()
         self._tree[("Super",)] = super_root
@@ -68,3 +72,10 @@ class OTree(ip.Tree):
         if not isinstance(next_action, str): next_action = repr(next_action)
         self._root = self._tree[("Super",) + (next_action,)]
         return super().select_plan()
+
+    def print(self, node: ip.Node = None):
+        if node is None:
+            node = self.tree[("Super", )]
+        logger.debug(f"{node.key}: (A, Q)={list(zip(node.actions_names, node.q_values))}; Visits={node.action_visits}")
+        for child in node.children.values():
+            self.print(child)

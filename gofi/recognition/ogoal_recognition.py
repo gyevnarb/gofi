@@ -1,12 +1,10 @@
 import numpy as np
-from shapely.geometry import Point
 
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict
 import igp2 as ip
 
-from gofi.ogoals_probabilities import OGoalsProbabilities
-from gofi.occluded_factor import OccludedFactor
+from gofi.recognition.ogoals_probabilities import OGoalsProbabilities
 
 logger = logging.getLogger(__name__)
 

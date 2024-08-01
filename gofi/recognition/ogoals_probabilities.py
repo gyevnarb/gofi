@@ -1,4 +1,5 @@
 import random
+from operator import itemgetter
 from typing import List, Tuple, Dict, Union
 from copy import copy
 import igp2 as ip
@@ -81,7 +82,7 @@ class OGoalsProbabilities:
         """
         self._merged_occluded_factors_probabilities = pz
 
-    def sample_occluded_factor(self, k: int = 1) -> list[OccludedFactor]:
+    def sample_occluded_factor(self, k: int = 1) -> List[OccludedFactor]:
         """ Sample an occluded factor from the distribution $p(z|\hat{s}_{1:t})$
 
         Args:
@@ -91,7 +92,7 @@ class OGoalsProbabilities:
         weights = self.merged_occluded_factors_probabilities.values()
         return random.choices(factors, weights=weights, k=k)
 
-    def sample_goals_given_factor(self, occluded_factor: OccludedFactor, k: int = 1) -> list[ip.Goal]:
+    def sample_goals_given_factor(self, occluded_factor: OccludedFactor, k: int = 1) -> List[ip.Goal]:
         """ Sample a goal given an occluded factor instantiations from the distribution $p(g^i|\hat{s}_{1:t},z)$
 
         Args:
@@ -134,6 +135,14 @@ class OGoalsProbabilities:
         """
         idx = self.all_trajectories[key].index(trajectory)
         return self.all_plans[key][idx]
+
+    def map_prediction(self) -> Tuple[Tuple[ip.Goal, OccludedFactor], ip.VelocityTrajectory]:
+        """ Return the MAP goal and trajectory prediction for each agent. """
+        goal = max(self.goals_probabilities, key=self.goals_probabilities.get)
+        trajectory, p_trajectory = \
+            max(zip(self.all_trajectories[goal], self.trajectories_probabilities[goal]),
+                key=itemgetter(1))
+        return goal, trajectory
 
     @property
     def goals_probabilities(self) -> Dict[Tuple[ip.Goal, OccludedFactor], float]:
