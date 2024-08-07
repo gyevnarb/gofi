@@ -144,6 +144,32 @@ class OGoalsProbabilities:
                 key=itemgetter(1))
         return goal, trajectory
 
+    def add_smoothing(self, alpha: float = 1., uniform_goals: bool = False):
+        """ Perform add-alpha smoothing on the probability distribution in place.
+
+         Args:
+             alpha: Additive factor for smoothing.
+             uniform_goals: Whether to normalise goal probabilities to uniform distribution,
+         """
+        # Smooth occluded factor probabilities
+        n_factors = len(self.occluded_factors)
+        self._occluded_factors_probabilities = {
+            factor: (prob + alpha) / (1 + n_factors * alpha)
+            for factor, prob in self._occluded_factors_probabilities.items()
+        }
+
+        # Smooth goal and trajectory probabilities given each occluded factor
+        for factor in self.occluded_factors:
+            n_reachable = len([goal for (goal, fact), trajs in self.trajectories_probabilities.items()
+                               if len(trajs) > 0 and fact == factor])
+            for goal in self.goals:
+                key = (goal, factor)
+                n_trajectories = len(self.trajectories_probabilities[key])
+                if n_trajectories > 0:
+                    self.goals_probabilities[key] = (self.goals_probabilities[key] + alpha) / (1 + n_reachable * alpha)
+                    self.trajectories_probabilities[key] = \
+                        [(prob + alpha) / (1 + n_trajectories * alpha) for prob in self.trajectories_probabilities[key]]
+
     @property
     def goals_probabilities(self) -> Dict[Tuple[ip.Goal, OccludedFactor], float]:
         """Returns the current goals probabilities."""
