@@ -153,17 +153,18 @@ class OGoalsProbabilities:
                 key=itemgetter(1))
         return goal, trajectory
 
-    def add_smoothing(self, alpha: float = 1., uniform_goals: bool = False):
+    def add_smoothing(self, alpha_goal: float = 1., alpha_occlusion: float = 1., uniform_goals: bool = False):
         """ Perform add-alpha smoothing on the probability distribution in place.
 
          Args:
-             alpha: Additive factor for smoothing.
+             alpha_goal: Additive factor for goal probability smoothing.
+             alpha_occlusion: Additive factor for occlusion probability smoothing.
              uniform_goals: Whether to normalise goal probabilities to uniform distribution,
          """
         # Smooth occluded factor probabilities
         n_factors = len(self.occluded_factors)
         self._occluded_factors_probabilities = {
-            factor: (prob + alpha) / (1 + n_factors * alpha)
+            factor: (prob + alpha_occlusion) / (1 + n_factors * alpha_occlusion)
             for factor, prob in self._occluded_factors_probabilities.items()
         }
 
@@ -175,9 +176,10 @@ class OGoalsProbabilities:
                 key = (goal, factor)
                 n_trajectories = len(self.trajectories_probabilities[key])
                 if n_trajectories > 0:
-                    self.goals_probabilities[key] = (self.goals_probabilities[key] + alpha) / (1 + n_reachable * alpha)
-                    self.trajectories_probabilities[key] = \
-                        [(prob + alpha) / (1 + n_trajectories * alpha) for prob in self.trajectories_probabilities[key]]
+                    self.goals_probabilities[key] = (
+                            (self.goals_probabilities[key] + alpha_goal) / (1 + n_reachable * alpha_goal))
+                    self.trajectories_probabilities[key] = [(prob + alpha_goal) / (1 + n_trajectories * alpha_goal)
+                                                            for prob in self.trajectories_probabilities[key]]
 
     @property
     def goals_probabilities(self) -> Dict[Tuple[ip.Goal, OccludedFactor], float]:

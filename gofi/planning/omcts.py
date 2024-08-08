@@ -17,6 +17,7 @@ class OMCTS(ip.MCTS):
     """ An MCTS search algorithm that takes occlusions into account. """
     def __init__(self, *args, **kwargs):
         super(OMCTS, self).__init__(*args, **kwargs)
+        self._allow_hide_occluded = kwargs.get("allow_hide_occluded", True)
         self._current_occluded_factor = None
         self._hide_occluded = False
 
@@ -41,7 +42,7 @@ class OMCTS(ip.MCTS):
                 if isinstance(element, ip.TrajectoryAgent):
                     element.set_start_time(int(tree.root.state[0].time * simulator.fps / self.env_fps))
 
-            self._hide_occluded = tree.set_occlusions(occluded_factor)
+            self._hide_occluded = tree.set_occlusions(occluded_factor, self._allow_hide_occluded)
             if self._hide_occluded:
                 # If an occluded factor is present sometimes we want to pretend it is not there to
                 #  test the ego for missing the occluded factor.

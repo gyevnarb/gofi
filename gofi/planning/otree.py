@@ -30,24 +30,32 @@ class OTree(ip.Tree):
         self.add_child(super_root, self._root)
         self._root = super_root
 
-    def set_occlusions(self, occluded_factor: OccludedFactor = None):
+    def set_occlusions(self, occluded_factor: OccludedFactor = None, allow_hide_occluded: bool = True) -> bool:
         """ Specifies which occlusions branch to use from the super node and performs necessary
          updates to bookkeeping.
 
-         Returns:
+        Args:
+            occluded_factor: the occluded factor to use for the next simulation.
+             allow_hide_occluded: whether to allow hiding the occluded factor in simulation.
+
+        Returns:
              hide_occluded: whether the present occluded factor is hidden from the ego in simulation.
-             """
+        """
+        def pick_action():
+            action_ = "Root" if occluded_factor.no_occlusions else occluded_factor
+            idx_ = self.root.actions.index(action_)
+            self.root.action_visits[idx_] += 1
+            return action_
+
         self.root.state_visits += 1
 
         if occluded_factor.no_occlusions or self.root.action_visits[self.root.actions_names.index("Root")] == 0:
             # If "Root" has not yet been visited or there are no occlusion use deterministic action selection
-            action = "Root" if occluded_factor.no_occlusions else occluded_factor
-            idx = self.root.actions.index(action)
-            self.root.action_visits[idx] += 1
+            action = pick_action()
         else:
             # If there is an occlusion, use action policy to select branch. This will sometimes result in
             #  a rollout where the occluded factor is present but we intentionally hide it from the ego.
-            action = self.select_action(self.root)
+            action = self.select_action(self.root) if allow_hide_occluded else pick_action()
         key = ("Super", str(action))
 
         if key in self._tree:
@@ -60,7 +68,7 @@ class OTree(ip.Tree):
             self.add_child(self.root, new_node)
             self._root = new_node
 
-        hide_occluded = not occluded_factor.no_occlusions and action == "Root"
+        hide_occluded = allow_hide_occluded and not occluded_factor.no_occlusions and action == "Root"
         return hide_occluded
 
     def backprop(self, r: float, final_key: Tuple):
