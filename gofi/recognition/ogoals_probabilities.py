@@ -124,15 +124,24 @@ class OGoalsProbabilities:
             plans = [self.trajectory_to_plan(key, traj) for traj in trajectories]
             return trajectories, plans
 
-    def trajectory_to_plan(self, key: Tuple[ip.Goal, OccludedFactor], trajectory: ip.VelocityTrajectory) \
+    def trajectory_to_plan(self,
+                           goal: ip.Goal,
+                           trajectory: ip.VelocityTrajectory,
+                           occluded_factor: OccludedFactor = None) \
             -> List[ip.MacroAction]:
         """ Return the plan that generated the trajectory. Not used for optimal trajectories.
         The function will raise an error if either the key or the trajectory is not found.
 
         Args:
-            key: a goal and occluded factor instantiation tuple
+            goal: the goal to reach with the trajectory
             trajectory: the trajectory for which the plan is to be retrieved
+            occluded_factor: the occluded factor in the environment
         """
+        if occluded_factor is not None:
+            key = (goal, occluded_factor)
+        else:
+            key = goal
+
         idx = self.all_trajectories[key].index(trajectory)
         return self.all_plans[key][idx]
 
