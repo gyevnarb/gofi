@@ -4,6 +4,7 @@ import random
 import igp2 as ip
 from typing import List, Dict
 
+from igp2 import Observation
 from shapely import Point
 from shapely.ops import split
 import numpy as np
@@ -36,6 +37,7 @@ class GOFIAgent(ip.MCTSAgent):
 
         self._occluded_factors_prior = occluded_factors_prior
         self._forced_visible_agents = None
+        self._current_occluded_factor = None
 
         self._goal_recognition = OGoalRecognition(
             astar=self._astar,
@@ -63,6 +65,32 @@ class GOFIAgent(ip.MCTSAgent):
     def force_visible_agents(self, agent_ids: List[int]):
         """ Force the occluded factors to be used in the goal recognition. """
         self._forced_visible_agents = agent_ids
+
+    def next_action(self, observation: ip.Observation) -> ip.Action:
+        """ Returns the next action for the agent.
+
+        If the current macro actions has finished, then updates it.
+        If no macro actions are left in the plan, or we have hit the planning time step, then calls goal recognition
+        and MCTS. """
+        self.update_observations(observation)
+
+        if self._k >= self._kmax or self.current_macro is None or \
+                (self.current_macro.done(observation) and self._current_macro_id == len(self._macro_actions) - 1):
+            self._goals = self.get_goals(observation)
+            self.update_plan(observation)
+            self.update_macro_action(
+                self._macro_actions[0].macro_action_type,
+                self._macro_actions[0].ma_args,
+                observation)
+            self._k = 0
+
+        self._update_observation_with_occlusions(observation)
+
+        if self.current_macro.done(observation):
+            self._advance_macro(observation)
+
+        self._k += 1
+        return self.current_macro.next_action(observation)
 
     def get_occluded_factors(self, observation: ip.Observation) -> List[OccludedFactor]:
         """ Get a list of all possible occluded factor instantiations.
@@ -147,9 +175,31 @@ class GOFIAgent(ip.MCTSAgent):
         for agent_id, probabilities in self._goal_probabilities.items():
             probabilities.set_merged_occluded_factors_probabilities(pz)
 
-        self._macro_actions = self._mcts.search(
+        self._current_occluded_factor = None
+
+        self._macro_actions, search_tree = self._mcts.search(
             agent_id=self.agent_id,
             goal=self.goal,
             frame=frame,
             meta=agents_metadata,
             predictions=self._goal_probabilities)
+
+        occluded_factor, _ = search_tree.plan_policy.select(search_tree.root)
+        if isinstance(occluded_factor, OccludedFactor):
+            logger.info(f"Setting occluded factor for further planning: {occluded_factor}")
+            self._current_occluded_factor = occluded_factor
+            self._update_observation_with_occlusions(observation)
+
+    def _update_observation_with_occlusions(self, observation: Observation):
+        """ Update in-place the observation with states of occluded TrajectoryAgents in the current occluded factor. """
+        if self._current_occluded_factor is not None:
+            for agent in self._current_occluded_factor.present_elements:
+                if agent.agent_id in observation.frame:
+                    continue
+                current_t = int(observation.frame[self.agent_id].time * agent.fps / self.fps)
+                agent.set_start_time(current_t)
+                observation.frame[agent.agent_id] = agent.state
+                logger.debug(f"Updated for occluded agent {agent.agent_id} - "
+                             f"Pos: {np.round(agent.state.position, 2)} -  "
+                             f"Vel: {np.round(agent.state.speed, 3)}")
+        return observation

@@ -71,15 +71,21 @@ class OTree(ip.Tree):
         hide_occluded = allow_hide_occluded and not occluded_factor.no_occlusions and action == "Root"
         return hide_occluded
 
-    def backprop(self, r: float, final_key: Tuple):
+    def backprop(self, r: float, final_key: Tuple, force_reward: bool = False):
         self._root = self._tree[("Super",)]
-        super().backprop(r, final_key)
+        super().backprop(r, final_key, force_reward)
 
-    def select_plan(self) -> List:
+    def select_plan(self) -> Tuple[List, Tuple[str]]:
+        # Select the best super root node
         next_action, _ = self._plan_policy.select(self.root)
         if not isinstance(next_action, str): next_action = repr(next_action)
+
+        # Find optimal action sequence from the current root then reset root to super-root
         self._root = self._tree[("Super",) + (next_action,)]
-        return super().select_plan()
+        plan, trace = super().select_plan()
+        self._root = self._tree[("Super",)]
+
+        return plan, trace
 
     def print(self, node: ip.Node = None):
         if node is None:

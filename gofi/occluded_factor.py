@@ -46,18 +46,25 @@ class OccludedFactor:
         object_reprs = ", ".join(map(repr, zip(self.__elements, self.__presence)))
         return f"OF({object_reprs})"
 
-    def update_frame(self, frame: Dict[int, ip.AgentState]) -> Dict[int, ip.AgentState]:
+    def update_frame(self, frame: Dict[int, ip.AgentState], in_place: bool = False) -> Dict[int, ip.AgentState]:
         """ Update the state of the given frame by including the occluded elements that are in the factor.
 
         Args:
             frame: The frame to update.
+            in_place: Whether to update the frame in place or return a new frame.
         """
-        new_frame = frame.copy()
+        if in_place:
+            for agent, present in zip(self.__elements, self.__presence):
+                if present:
+                    frame[agent.agent_id] = agent.state
+            return frame
+        else:
+            new_frame = frame.copy()
 
-        for agent, present in zip(self.__elements, self.__presence):
-            if present:
-                new_frame[agent.agent_id] = agent.state
-        return new_frame
+            for agent, present in zip(self.__elements, self.__presence):
+                if present:
+                    new_frame[agent.agent_id] = agent.state
+            return new_frame
 
     @classmethod
     def create_all_instantiations(
