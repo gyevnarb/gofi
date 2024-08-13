@@ -158,11 +158,25 @@ class OGoalRecognition(ip.GoalRecognition):
                 pz = pz_unnorm
                 goals_probabilities.occluded_factors_probabilities[factor] = pz / norm_factor
                 for key, pg_z in goals_probabilities.goals_probabilities.items():
-                    if key[1] == factor:
-                        pgz = pg_z / pz if pz != 0. else goals_probabilities.goals_priors[key[0]]
+                    if key[1] == factor and len(goals_probabilities.trajectories_probabilities[key]) > 0:
+                        if pz != 0.0:
+                            pgz = pg_z / pz
+                        else:
+                            pgz = goals_probabilities.goals_priors[key[0]]
                         goals_probabilities.goals_probabilities[key] = pgz
             except ZeroDivisionError:
                 logger.debug("\tAll factors impossible. Setting probabilities to 0.")
+
+        # For all factors with zero probability, normalise goal probabilities to sum up to one
+        for factor, pz in goals_probabilities.occluded_factors_probabilities.items():
+            if pz > 0.:
+                continue
+            sum_probs = sum([pg_z for key, pg_z in goals_probabilities.goals_probabilities.items() if key[1] == factor])
+            if np.isclose(sum_probs, 1.0):
+                continue
+            for key, pg_z in goals_probabilities.goals_probabilities.items():
+                if key[1] == factor:
+                    goals_probabilities.goals_probabilities[key] /= sum_probs
 
         logger.debug(f"")
         logger.info("Final goals probabilities:")
