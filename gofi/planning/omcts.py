@@ -49,7 +49,7 @@ class OMCTS(ip.MCTS):
                 simulator.hide_occluded()
             self._current_occluded_factor = occluded_factor
             break
-        logger.debug(f"Occluded factor: {occluded_factor.present_elements}")
+        logger.debug(f"  Occluded factor: {occluded_factor.present_elements}")
 
         # 4-6. Sample goal and trajectory
         samples = {}
@@ -61,13 +61,13 @@ class OMCTS(ip.MCTS):
             trajectory, plan = agent_predictions.optimal_trajectory_to_goal_with_factor(agent_goal, occluded_factor)
             simulator.update_trajectory(aid, trajectory, plan)
             samples[aid] = (agent_goal, trajectory, occluded_factor)
-            logger.debug(f"Agent {aid} sample: {plan}")
+            logger.debug(f"  Agent {aid} sample: {plan}")
 
         final_key = self._run_simulation(agent_id, goal, tree, simulator, debug)
-        logger.debug(f"Final key: {final_key}")
+        logger.debug(f"  Final key: {final_key}")
 
         if self.store_results == "all":
-            logger.debug(f"Storing MCTS search results for iteration {k}.")
+            logger.debug(f"  Storing MCTS search results for iteration {k}.")
             mcts_result = OMCTSResult(deepcopy(tree), samples, final_key, occluded_factor)
             self.results.add_data(mcts_result)
 

@@ -90,6 +90,6 @@ class OTree(ip.Tree):
     def print(self, node: ip.Node = None):
         if node is None:
             node = self.tree[("Super", )]
-        logger.debug(f"{node.key}: (A, Q)={list(zip(node.actions_names, node.q_values))}; Visits={node.action_visits}")
+        logger.debug(f"  {node.key}: (A, Q)={list(zip(node.actions_names, node.q_values))}; Visits={node.action_visits}")
         for child in node.children.values():
             self.print(child)
