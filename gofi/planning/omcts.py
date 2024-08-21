@@ -87,7 +87,7 @@ class OMCTS(ip.MCTS):
                      predictions: Dict[int, OGoalsProbabilities]):
         """ Creates a new MCTS tree to store results. """
         root = self._create_node(self.to_key(None), agent_id, frame, goal)
-        tree = OTree(root, occluded_factors=list(predictions.values())[0].occluded_factors)
+        tree = self.tree_type(root, occluded_factors=list(predictions.values())[0].occluded_factors)
         return tree
 
     def reset(self):
