@@ -1,9 +1,10 @@
+import logging
 import random
 from operator import itemgetter
 from typing import List, Tuple, Dict, Union
 from copy import copy
 import igp2 as ip
-import matplotlib.pyplot as plt
+import numpy as np
 from itertools import product
 
 from gofi.occluded_factor import OccludedFactor
@@ -180,6 +181,17 @@ class OGoalsProbabilities:
                             (self.goals_probabilities[key] + alpha_goal) / (1 + n_reachable * alpha_goal))
                     self.trajectories_probabilities[key] = [(prob + alpha_goal) / (1 + n_trajectories * alpha_goal)
                                                             for prob in self.trajectories_probabilities[key]]
+
+    def log(self, lgr: logging.Logger):
+        """ Log the probabilities to the given logger. """
+        for factor, pz in self.occluded_factors_probabilities.items():
+            lgr.info(f"{factor}: {np.round(pz, 3)}")
+            for key, pg_z in self.goals_probabilities.items():
+                if pg_z != 0. and key[1] == factor:
+                    lgr.info(f"\t{key[0]}: {np.round(pg_z, 3)}")
+                    for i, (plan, prob) in enumerate(zip(self.all_plans[key], self.trajectories_probabilities[key])):
+                        lgr.info(f"\t\tTrajectory {i}: {np.round(prob, 3)}")
+                        lgr.info(f"\t\t\t{plan}")
 
     @property
     def goals_probabilities(self) -> Dict[Tuple[ip.Goal, OccludedFactor], float]:

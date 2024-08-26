@@ -178,14 +178,9 @@ class OGoalRecognition(ip.GoalRecognition):
                 if key[1] == factor:
                     goals_probabilities.goals_probabilities[key] /= sum_probs
 
-        logger.debug(f"")
+        logger.info("")
         logger.info("Final goals probabilities:")
-        for factor, pz in goals_probabilities.occluded_factors_probabilities.items():
-            logger.info(f"{factor}: {np.round(pz, 3)}")
-            for key, pg_z in goals_probabilities.goals_probabilities.items():
-                if pg_z != 0. and key[1] == factor:
-                    logger.info(f"\t{key[0]}: {np.round(pg_z, 3)}")
-        # logger.info()
-        # logger.debug({k: v for k, v in goals_probabilities.goals_probabilities.items() if v != 0.})
+        goals_probabilities.log(logger)
+        logger.info("")
 
         return goals_probabilities
