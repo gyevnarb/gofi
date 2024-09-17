@@ -2,6 +2,7 @@ import logging
 
 import igp2 as ip
 from gofi.agents.occluded_agent import OccludedAgent
+from gofi.agents.gofi_agent import GOFIAgent
 
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class OSimulation(ip.simplesim.Simulation):
         Args:
             agent_id: the id of the agent for which to generate the observation
         """
-        if agent_id == 0:
+        if agent_id == 0 and isinstance(self.agents[agent_id], GOFIAgent):
             occluded_ids = [aid for aid, agent in self.agents.items() if isinstance(agent, OccludedAgent)]
             remove_occluded = {aid: state for aid, state in self.state.items() if aid not in occluded_ids}
             force_visible = [aid for aid, agent in self.agents.items() if isinstance(agent, OccludedAgent) and
