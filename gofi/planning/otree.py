@@ -24,6 +24,8 @@ class OTree(ip.Tree):
         assert occluded_factors is not None, "Occluded factors must be provided. Else use a regular Tree."
 
         actions = ["Root" if of.no_occlusions else of for of in occluded_factors]
+        if "Root" not in actions:
+            actions.append("Root")
         super_root = ip.Node(("Super",), self._root.state.copy(), actions)
         super_root.expand()
         self._tree[("Super",)] = super_root

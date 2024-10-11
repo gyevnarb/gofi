@@ -177,10 +177,12 @@ class OGoalsProbabilities:
                 key = (goal, factor)
                 n_trajectories = len(self.trajectories_probabilities[key])
                 if n_trajectories > 0:
-                    self.goals_probabilities[key] = (
-                            (self.goals_probabilities[key] + alpha_goal) / (1 + n_reachable * alpha_goal))
-                    self.trajectories_probabilities[key] = [(prob + alpha_goal) / (1 + n_trajectories * alpha_goal)
-                                                            for prob in self.trajectories_probabilities[key]]
+                    if uniform_goals:
+                        self.goals_probabilities[key] = 1. / n_reachable
+                    else:
+                        self.goals_probabilities[key] = (self.goals_probabilities[key] + alpha_goal) / (1 + n_reachable * alpha_goal)
+                        self.trajectories_probabilities[key] = [(prob + alpha_goal) / (1 + n_trajectories * alpha_goal)
+                                                                for prob in self.trajectories_probabilities[key]]
 
     def log(self, lgr: logging.Logger):
         """ Log the probabilities to the given logger. """

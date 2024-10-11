@@ -17,6 +17,8 @@ class OMCTS(ip.MCTS):
     """ An MCTS search algorithm that takes occlusions into account. """
     def __init__(self, *args, **kwargs):
         super(OMCTS, self).__init__(*args, **kwargs)
+        if self.tree_type is ip.Tree:
+            self.tree_type = OTree
         self._allow_hide_occluded = kwargs.get("allow_hide_occluded", True)
         self._current_occluded_factor = None
         self._hide_occluded = False
