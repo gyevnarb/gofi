@@ -51,7 +51,7 @@ class OTree(ip.Tree):
 
         self.root.state_visits += 1
 
-        if occluded_factor.no_occlusions or self.root.action_visits[self.root.actions_names.index("Root")] == 0:
+        if occluded_factor.no_occlusions:
             # If "Root" has not yet been visited or there are no occlusion use deterministic action selection
             action = pick_action()
         else:
