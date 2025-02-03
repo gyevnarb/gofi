@@ -1,0 +1,18 @@
+[project]
+name = "gofi"
+version = "0.1.0"
+description = "Open-source implementation of the occlusion-supporting goal recognition and motion planning algorithm GOFI from the paper: Interpretable Goal Recognition in the Presence of Occluded Factors for Autonomous Vehicles."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  {name = "Balint Gyevnar", email = "balint.gyevnar@ed.ac.uk"},
+]
+maintainers = [
+  {name = "Balint Gyevnar", email = "balint.gyevnar@ed.ac.uk"}
+]
+dependencies = [
+    "igp2",
+]
+
+[tool.uv.sources]
+igp2 = { git = "https://github.com/uoe-agents/IGP2" }
