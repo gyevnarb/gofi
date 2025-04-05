@@ -92,11 +92,11 @@ class GOFIAgent(ip.MCTSAgent):
         self._k += 1
         return self.current_macro.next_action(observation)
 
-    def get_occluded_factors(self, observation: ip.Observation) -> List[OccludedFactor]:
+    def get_occluded_factors(self, observation: ip.Observation, agents_only: bool = False) -> List[OccludedFactor]:
         """ Get a list of all possible occluded factor instantiations.
         All occluded agents follow their current lane until its end.
         """
-        elements = []
+        elements = {}
         for aid, state in self._occlusions.items():
             new_agent = ip.TrajectoryAgent(aid, state, open_loop=True, reset_trajectory=False, fps=self._omcts.fps)
 
@@ -126,9 +126,27 @@ class GOFIAgent(ip.MCTSAgent):
                         break
                 velocity = np.array([state.speed] * len(trajectory))
                 new_agent.set_trajectory(ip.VelocityTrajectory(trajectory, velocity))
-            elements.append(new_agent)
+            elements[aid] = new_agent
 
-        return OccludedFactor.create_all_instantiations(elements, self._forced_visible_agents)
+        if agents_only:
+            return elements
+        return OccludedFactor.create_all_instantiations(list(elements.values()), self._forced_visible_agents)
+
+    def occluded_state(self, observation: ip.Observation, time: int) -> Dict[int, ip.AgentState]:
+        """Get the estimated occluded state of an occluded factor at time t."""
+        agents = self.get_occluded_factors(observation, agents_only=True)
+        states = {}
+        for aid, agent in agents.items():
+            if len(agent.path) < time:
+                raise ValueError(f"Length of occluded trajectory is shorter than time {time}.")
+            states[aid] = ip.AgentState(
+                time=time,
+                position=agent.trajectory.path[time],
+                velocity=agent.trajectory.velocity[time],
+                acceleration=agent.trajectory.acceleration[time],
+                heading=agent.trajectory.heading[time],
+            )
+        return states
 
     def update_plan(self, observation: ip.Observation):
         frame = observation.frame
