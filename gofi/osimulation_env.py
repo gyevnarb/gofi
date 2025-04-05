@@ -22,7 +22,7 @@ class OSimulationEnv(ip.simplesim.SimulationEnv):
         self.config = config
 
         # Initialize simulation
-        self.scenario_map = OMap.parse_from_opendrive(config["scenario"]["map_path"], config.get("objects", []))
+        self.scenario_map = OMap.parse_from_description(config["scenario"]["map_path"], config.get("objects", []))
         self.fps = int(config["scenario"]["fps"]) if "fps" in config["scenario"] else 20
         self.open_loop = config["scenario"].get("open_loop", False)
         self.separate_ego = config["scenario"].get("separate_ego", False)
