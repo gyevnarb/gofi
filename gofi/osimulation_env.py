@@ -1,6 +1,10 @@
 from typing import Dict, Any
+
+import gymnasium as gym
+import numpy as np
 import igp2 as ip
 
+from gofi.map.omap import OMap
 from gofi.osimulation import OSimulation
 from gofi.agents.gofi_agent import GOFIAgent
 from gofi.agents.occluded_agent import OccludedAgent
@@ -10,11 +14,29 @@ from gofi.occluded_factor import StaticObject
 
 class OSimulationEnv(ip.simplesim.SimulationEnv):
     def __init__(self, config: Dict[str, Any], render_mode: str = None):
-        """Initialise the simulation environment with occluded factors."""
-        super().__init__(config, render_mode)
+        """Initialise new simple simulation environment as a ParallelEnv.
+        Args:
+            config: Scenario configuration object.
+            open_loop: If true then no physical controller will be applied.
+        """
+        self.config = config
+
+        # Initialize simulation
+        self.scenario_map = OMap.parse_from_opendrive(config["scenario"]["map_path"], config.get("objects", []))
+        self.fps = int(config["scenario"]["fps"]) if "fps" in config["scenario"] else 20
+        self.open_loop = config["scenario"].get("open_loop", False)
+        self.separate_ego = config["scenario"].get("separate_ego", False)
         self._simulation = OSimulation(self.scenario_map, self.fps, self.open_loop)
 
-    def create_agent(self, agent_config, scenario_map, frame, fps, args):
+        # Set up Env variables
+        self.n_agents = None
+        self.reset_observation_space(init=True)
+        self.action_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf, shape=(2,), dtype=np.float64
+        )
+        self.render_mode = render_mode
+
+    def create_agent(self, agent_config, scenario_map, frame, fps):
         base_agent = {
             "agent_id": agent_config["id"],
             "initial_state": frame[agent_config["id"]],
