@@ -46,7 +46,7 @@ class GOFIAgent(ip.MCTSAgent):
             cost=self._cost,
             **kwargs["goal_recognition"])
 
-        self._mcts = OMCTS(scenario_map=kwargs["scenario_map"],
+        self._omcts = OMCTS(scenario_map=kwargs["scenario_map"],
                            reward=self._reward,
                            n_simulations=kwargs.get("n_simulations", 5),
                            max_depth=kwargs.get("max_depth", 5),
@@ -98,7 +98,7 @@ class GOFIAgent(ip.MCTSAgent):
         """
         elements = []
         for aid, state in self._occlusions.items():
-            new_agent = ip.TrajectoryAgent(aid, state, open_loop=True, reset_trajectory=False, fps=self._mcts.fps)
+            new_agent = ip.TrajectoryAgent(aid, state, open_loop=True, reset_trajectory=False, fps=self._omcts.fps)
 
             if state.speed < ip.Stop.STOP_VELOCITY:
                 new_agent.set_trajectory(None, stop_seconds=100.)
@@ -137,9 +137,8 @@ class GOFIAgent(ip.MCTSAgent):
         visible_region = ip.Circle(frame[self.agent_id].position, self.view_radius)
 
         self._goal_probabilities = \
-            {aid: OGoalsProbabilities(self._goals, occluded_factors,
-                                      occluded_factors_priors=self._occluded_factors_prior)
-             for aid in frame.keys() if aid != self.agent_id}
+            {aid: OGoalsProbabilities(self._goals, occluded_factors, occluded_factors_priors=self._occluded_factors_prior)
+             for aid in frame.keys() if aid != self.agent_id and aid not in self._occlusions}
 
         if self._belief_merging_order == "increasing_id":
             id_order = sorted(self._goal_probabilities)
@@ -149,6 +148,15 @@ class GOFIAgent(ip.MCTSAgent):
             id_order = self._belief_merging_order
         else:
             raise ValueError(f"Unknown belief merging order: {self._belief_merging_order}")
+
+        if not self._goal_probabilities:
+            self._macro_actions, search_tree = self._mcts.search(
+                agent_id=self.agent_id,
+                goal=self.goal,
+                frame={0: frame[0]},
+                meta=agents_metadata,
+                predictions=self._goal_probabilities)
+            return
 
         previous_agent_id = None
         for agent_id in id_order:
@@ -177,7 +185,7 @@ class GOFIAgent(ip.MCTSAgent):
 
         self._current_occluded_factor = None
 
-        self._macro_actions, search_tree = self._mcts.search(
+        self._macro_actions, search_tree = self._omcts.search(
             agent_id=self.agent_id,
             goal=self.goal,
             frame=frame,
@@ -186,7 +194,7 @@ class GOFIAgent(ip.MCTSAgent):
 
         occluded_factor, _ = search_tree.plan_policy.select(search_tree.root)
         if isinstance(occluded_factor, OccludedFactor):
-            logger.info(f"Setting occluded factor for further planning: {occluded_factor}")
+            logger.info(f"Setting occluded factor for further control: {occluded_factor}")
             self._current_occluded_factor = occluded_factor
             self._update_observation_with_occlusions(observation)
 

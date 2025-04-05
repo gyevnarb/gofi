@@ -19,7 +19,7 @@ class OSimulation(ip.simplesim.Simulation):
         """
         if agent_id == 0 and isinstance(self.agents[agent_id], GOFIAgent):
             occluded_ids = [aid for aid, agent in self.agents.items() if agent is not None
-                            and isinstance(agent, OccludedAgent)]
+                            and isinstance(agent, OccludedAgent) and agent.is_occluded(self.t)]
             remove_occluded = {aid: state for aid, state in self.state.items() if state is not None
                                and aid not in occluded_ids}
             force_visible = [aid for aid, agent in self.agents.items() if agent is not None
