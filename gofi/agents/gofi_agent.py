@@ -137,7 +137,7 @@ class GOFIAgent(ip.MCTSAgent):
         agents = self.get_occluded_factors(observation, agents_only=True)
         states = {}
         for aid, agent in agents.items():
-            if len(agent.path) < time:
+            if len(agent.trajectory.path) < time:
                 raise ValueError(f"Length of occluded trajectory is shorter than time {time}.")
             states[aid] = ip.AgentState(
                 time=time,
