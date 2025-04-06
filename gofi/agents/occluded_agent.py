@@ -25,14 +25,32 @@ class OccludedAgent(ip.TrafficAgent):
 
     def is_occluded(self, t: int, observation: ip.Observation) -> bool:
         """ Check if the agent is occluded at the given time step. """
-        current_occlusion = [occlusion for occlusion in self._occlusions if occlusion["start"] <= t < occlusion["end"]]
-        if not current_occlusion:
+        current_occlusions = [occlusion for occlusion in self._occlusions
+                             if occlusion["start"] <= t < occlusion["end"]
+                             or "by_agent" in occlusion]
+        if not current_occlusions:
             return False
 
-        current_occlusion = current_occlusion[0]
-        if "by_agent" in current_occlusion and current_occlusion["by_agent"] not in observation.frame:
-            return False
-        return True
+        for occlusion in current_occlusions:
+            if "by_agent" in occlusion and occlusion["by_agent"] not in observation.frame:
+                continue
+
+            if occlusion["start"] <= t < occlusion["end"]:
+                return True
+
+            if "by_agent" in occlusion:
+                scenario_map = observation.scenario_map
+                frame = observation.frame
+                ego_lane = scenario_map.best_lane_at(frame[0].position, frame[0].heading)
+                blocking_lane = scenario_map.best_lane_at(frame[occlusion["by_agent"]].position, frame[occlusion["by_agent"]].heading)
+                occ_lane = scenario_map.best_lane_at(frame[self.agent_id].position, frame[self.agent_id].heading)
+                if ego_lane == blocking_lane == occ_lane:
+                    ego_pos = ego_lane.distance_at(frame[0].position)
+                    blocking_pos = blocking_lane.distance_at(frame[occlusion["by_agent"]].position)
+                    occ_pos = occ_lane.distance_at(frame[self.agent_id].position)
+                    if ego_pos < blocking_pos < occ_pos:
+                        return True
+        return False
 
     @property
     def occlusions(self) -> List[Dict[str, float]]:
