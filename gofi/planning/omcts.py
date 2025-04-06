@@ -42,7 +42,6 @@ class OMCTS(ip.MCTS):
         # 3. Sample occluded factor instantiation
         for aid, agent_predictions in predictions.items():
             occluded_factor = agent_predictions.sample_occluded_factor()[0]
-            simulator.set_occluded_factor(occluded_factor)
 
             # Set the start time of the occluded factor to account for different FPSs
             for element in occluded_factor.present_elements:
@@ -56,6 +55,8 @@ class OMCTS(ip.MCTS):
                 simulator.hide_occluded()
             self._current_occluded_factor = occluded_factor
             break
+
+        simulator.set_occluded_factor(occluded_factor)
         logger.debug(f"  Occluded factor: {occluded_factor.present_elements}")
 
         # 4-6. Sample goal and trajectory
@@ -94,7 +95,10 @@ class OMCTS(ip.MCTS):
                      predictions: Dict[int, OGoalsProbabilities]):
         """ Creates a new MCTS tree to store results. """
         root = self._create_node(self.to_key(None), agent_id, frame, goal)
-        tree = self.tree_type(root, occluded_factors=list(predictions.values())[0].occluded_factors)
+        occluded_factors = [self.occluded_factor]
+        if predictions:
+            occluded_factors = list(predictions.values())[0].occluded_factors
+        tree = self.tree_type(root, occluded_factors=occluded_factors)
         return tree
 
     def reset(self):
