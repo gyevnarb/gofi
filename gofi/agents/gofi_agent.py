@@ -169,8 +169,10 @@ class GOFIAgent(ip.MCTSAgent):
 
         if not self._goal_probabilities:
             for of in occluded_factors:
-                if set([agent.agent_id for agent in of.present_elements]) == set(self._forced_visible_agents):
+                present_ids = set([agent.agent_id for agent in of.present_elements])
+                if present_ids == set(self._forced_visible_agents):
                     self._omcts.occluded_factor = of
+                    break
             self._macro_actions, search_tree = self._omcts.search(
                 agent_id=self.agent_id,
                 goal=self.goal,
