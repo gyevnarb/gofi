@@ -2,7 +2,7 @@ import logging
 import random
 
 import igp2 as ip
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from igp2 import Observation
 from shapely import Point
@@ -132,7 +132,7 @@ class GOFIAgent(ip.MCTSAgent):
             return elements
         return OccludedFactor.create_all_instantiations(list(elements.values()), self._forced_visible_agents)
 
-    def occluded_state(self, observation: ip.Observation, time: int) -> Dict[int, ip.AgentState]:
+    def occluded_state(self, observation: ip.Observation, time: int) -> Tuple[Dict[int, ip.AgentState], ip.VelocityTrajectory]:
         """Get the estimated occluded state of an occluded factor at time t."""
         agents = self.get_occluded_factors(observation, agents_only=True)
         states = {}
@@ -146,7 +146,7 @@ class GOFIAgent(ip.MCTSAgent):
                 acceleration=agent.trajectory.acceleration[time],
                 heading=agent.trajectory.heading[time],
             )
-        return states
+        return states, agent.trajectory.slice(0, time)
 
     def update_plan(self, observation: ip.Observation):
         frame = observation.frame
