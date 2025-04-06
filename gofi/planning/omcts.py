@@ -42,21 +42,22 @@ class OMCTS(ip.MCTS):
         # 3. Sample occluded factor instantiation
         for aid, agent_predictions in predictions.items():
             occluded_factor = agent_predictions.sample_occluded_factor()[0]
-
-            # Set the start time of the occluded factor to account for different FPSs
-            for element in occluded_factor.present_elements:
-                if isinstance(element, ip.TrajectoryAgent):
-                    element.set_start_time(int(tree.root.state[0].time * simulator.fps / self.env_fps))
-
-            self._hide_occluded = tree.set_occlusions(occluded_factor, self._allow_hide_occluded)
-            if self._hide_occluded:
-                # If an occluded factor is present sometimes we want to pretend it is not there to
-                #  test the ego for missing the occluded factor.
-                simulator.hide_occluded()
-            self._current_occluded_factor = occluded_factor
             break
 
         simulator.set_occluded_factor(occluded_factor)
+
+        # Set the start time of the occluded factor to account for different FPSs
+        for element in occluded_factor.present_elements:
+            if isinstance(element, ip.TrajectoryAgent):
+                element.set_start_time(int(tree.root.state[0].time * simulator.fps / self.env_fps))
+
+        self._hide_occluded = tree.set_occlusions(occluded_factor, self._allow_hide_occluded)
+        if self._hide_occluded:
+            # If an occluded factor is present sometimes we want to pretend it is not there to
+            #  test the ego for missing the occluded factor.
+            simulator.hide_occluded()
+        self._current_occluded_factor = occluded_factor
+
         logger.debug(f"  Occluded factor: {occluded_factor.present_elements}")
 
         # 4-6. Sample goal and trajectory
