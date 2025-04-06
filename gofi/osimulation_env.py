@@ -11,15 +11,17 @@ from gofi.agents.occluded_agent import OccludedAgent
 from gofi.occluded_factor import StaticObject
 
 
+MAX_ITERS = 10000
 
 class OSimulationEnv(ip.simplesim.SimulationEnv):
-    def __init__(self, config: Dict[str, Any], render_mode: str = None):
+    def __init__(self, config: Dict[str, Any], render_mode: str = None, max_iters: int = MAX_ITERS):
         """Initialise new simple simulation environment as a ParallelEnv.
         Args:
             config: Scenario configuration object.
             open_loop: If true then no physical controller will be applied.
         """
         self.config = config
+        self.max_iters = max_iters
 
         # Initialize simulation
         self.scenario_map = OMap.parse_from_description(config["scenario"]["map_path"], config.get("objects", []))
