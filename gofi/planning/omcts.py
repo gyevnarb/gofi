@@ -25,6 +25,9 @@ class OMCTS(ip.MCTS):
         self._current_occluded_factor = None
         self._hide_occluded = False
 
+        # Explicitly set occluded factor
+        self.occluded_factor = None
+
     def _rollout(self,
                  k: int,
                  agent_id: int,
@@ -34,7 +37,7 @@ class OMCTS(ip.MCTS):
                  debug: bool,
                  predictions: Dict[int, OGoalsProbabilities]):
         """ Run a single rollout of the MCTS search with occluded factors and store results. """
-        occluded_factor = None
+        occluded_factor = self.occluded_factor
 
         # 3. Sample occluded factor instantiation
         for aid, agent_predictions in predictions.items():

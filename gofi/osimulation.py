@@ -17,14 +17,17 @@ class OSimulation(ip.simplesim.Simulation):
         Args:
             agent_id: the id of the agent for which to generate the observation
         """
+        full_observation = super().get_observations(agent_id)
         if agent_id == 0 and isinstance(self.agents[agent_id], GOFIAgent):
             occluded_ids = [aid for aid, agent in self.agents.items() if agent is not None
-                            and isinstance(agent, OccludedAgent) and agent.is_occluded(self.t)]
+                            and isinstance(agent, OccludedAgent) and agent.is_occluded(self.t, full_observation)]
+
             remove_occluded = {aid: state for aid, state in self.state.items() if state is not None
                                and aid not in occluded_ids}
+
             force_visible = [aid for aid, agent in self.agents.items() if agent is not None
                              and isinstance(agent, OccludedAgent)
-                             and not agent.is_occluded(self.t)]
+                             and not agent.is_occluded(self.t, full_observation)]
 
             # Set the occluded state for each agent for the ego at the start of the simulation
             if self.t == 0:
@@ -34,4 +37,4 @@ class OSimulation(ip.simplesim.Simulation):
 
             return ip.Observation(remove_occluded, self.scenario_map)
         else:
-            return super().get_observations(agent_id)
+            return full_observation

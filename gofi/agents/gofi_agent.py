@@ -168,7 +168,10 @@ class GOFIAgent(ip.MCTSAgent):
             raise ValueError(f"Unknown belief merging order: {self._belief_merging_order}")
 
         if not self._goal_probabilities:
-            self._macro_actions, search_tree = self._mcts.search(
+            for of in occluded_factors:
+                if set([agent.agent_id for agent in of.present_elements]) == set(self._forced_visible_agents):
+                    self._omcts.occluded_factor = of
+            self._macro_actions, search_tree = self._omcts.search(
                 agent_id=self.agent_id,
                 goal=self.goal,
                 frame={0: frame[0]},

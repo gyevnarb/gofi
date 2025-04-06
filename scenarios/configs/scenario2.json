@@ -53,7 +53,7 @@
       },
       "mcts": {
         "t_update": 1.0,
-        "n_simulations": 15,
+        "n_simulations": 30,
         "max_depth": 5,
         "store_results": null,
         "trajectory_agents": false,
@@ -147,7 +147,8 @@
       "occlusions": [
         {
           "start": 0,
-          "end": 60
+          "end": 60,
+          "by_agent": 1
         }
       ]
     }

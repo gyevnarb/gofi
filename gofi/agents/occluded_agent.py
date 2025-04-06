@@ -23,9 +23,16 @@ class OccludedAgent(ip.TrafficAgent):
     def __str__(self) -> str:
         return self.__repr__()
 
-    def is_occluded(self, t: int) -> bool:
+    def is_occluded(self, t: int, observation: ip.Observation) -> bool:
         """ Check if the agent is occluded at the given time step. """
-        return any(occlusion["start"] <= t < occlusion["end"] for occlusion in self._occlusions)
+        current_occlusion = [occlusion for occlusion in self._occlusions if occlusion["start"] <= t < occlusion["end"]]
+        if not current_occlusion:
+            return False
+
+        current_occlusion = current_occlusion[0]
+        if "by_agent" in current_occlusion and current_occlusion["by_agent"] not in observation.frame:
+            return False
+        return True
 
     @property
     def occlusions(self) -> List[Dict[str, float]]:
