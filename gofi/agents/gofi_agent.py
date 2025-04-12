@@ -1,5 +1,6 @@
 import logging
 import random
+from copy import deepcopy
 
 import igp2 as ip
 from typing import List, Dict, Tuple
@@ -84,7 +85,7 @@ class GOFIAgent(ip.MCTSAgent):
                 observation)
             self._k = 0
 
-        self._update_observation_with_occlusions(observation)
+        observation = self._update_observation_with_occlusions(observation)
 
         if self.current_macro.done(observation):
             self._advance_macro(observation)
@@ -222,15 +223,19 @@ class GOFIAgent(ip.MCTSAgent):
             self._update_observation_with_occlusions(observation)
 
     def _update_observation_with_occlusions(self, observation: Observation):
-        """ Update in-place the observation with states of occluded TrajectoryAgents in the current occluded factor. """
+        """ Update the observation with states of occluded TrajectoryAgents in the current occluded factor. """
         if self._current_occluded_factor is not None:
+            new_frame = deepcopy(observation.frame)
             for agent in self._current_occluded_factor.present_elements:
                 if agent.agent_id in observation.frame:
                     continue
                 current_t = int(observation.frame[self.agent_id].time * agent.fps / self.fps)
                 agent.set_start_time(current_t)
-                observation.frame[agent.agent_id] = agent.state
+                new_state = agent.state
+                new_state.time = current_t
+                new_frame[agent.agent_id] = new_state
                 logger.debug(f"Updated for occluded agent {agent.agent_id} - "
                              f"Pos: {np.round(agent.state.position, 2)} -  "
                              f"Vel: {np.round(agent.state.speed, 3)}")
+            return ip.Observation(new_frame, observation.scenario_map)
         return observation
