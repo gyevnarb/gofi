@@ -23,6 +23,11 @@ class OSimulationEnv(ip.simplesim.SimulationEnv):
         self.config = config
         self.max_iters = max_iters
 
+        # Set IPG2 configurations
+        ip_config = ip.core.config.Configuration()
+        ip_config.set_properties(**config["scenario"])
+        ip.WaypointManeuver.ACC_ARGS["s_0"] = 3.0
+
         # Initialize simulation
         self.scenario_map = OMap.parse_from_description(config["scenario"]["map_path"], config.get("objects", []))
         self.fps = int(config["scenario"]["fps"]) if "fps" in config["scenario"] else 20
