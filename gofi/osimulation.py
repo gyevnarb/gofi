@@ -21,7 +21,7 @@ class OSimulation(ip.simplesim.Simulation):
         if not any(isinstance(agent, OccludedAgent) for agent in self.__agents.values()):
             logger.info("No occluded agents left in the simulation.")
             # No occluded vehicles are left in the simulation.
-            for aid, agent in self.__agents.items():
+            for aid, agent in self.agents.items():
                 if aid != 0 and isinstance(agent, ip.TrafficAgent):
                     logger.info(f"Replanning actions of agent {aid}.")
                     agent.set_destination(observation, agent.goal)
