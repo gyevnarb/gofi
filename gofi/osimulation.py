@@ -18,7 +18,7 @@ class OSimulation(ip.simplesim.Simulation):
         """
         observation = super().remove_agent(agent_id)
 
-        if not any(isinstance(agent, OccludedAgent) for agent in self.__agents.values()):
+        if not any(isinstance(agent, OccludedAgent) for agent in self.agents.values()):
             logger.info("No occluded agents left in the simulation.")
             # No occluded vehicles are left in the simulation.
             for aid, agent in self.agents.items():
