@@ -9,6 +9,25 @@ logger = logging.getLogger(__name__)
 
 
 class OSimulation(ip.simplesim.Simulation):
+
+    def remove_agent(self, agent_id: int) -> ip.Observation:
+        """ Remove an agent from the simulation.
+
+        Args:
+            agent_id: Agent ID to remove.
+        """
+        observation = super().remove_agent(agent_id)
+
+        if not any(isinstance(agent, OccludedAgent) for agent in self.__agents.values()):
+            logger.info("No occluded agents left in the simulation.")
+            # No occluded vehicles are left in the simulation.
+            for aid, agent in self.__agents.items():
+                if aid != 0 and isinstance(agent, ip.TrafficAgent):
+                    logger.info(f"Replanning actions of agent {aid}.")
+                    agent.set_destination(observation, agent.goal)
+        return observation
+
+
     def get_observations(self, agent_id: int = 0) -> ip.Observation:
         """ Get observations for the given agent. Occlusions are calculated based only on the line of sight as
         represented by a line without volume. Currently, this method applies occlusions only from the

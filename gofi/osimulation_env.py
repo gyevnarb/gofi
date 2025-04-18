@@ -83,9 +83,6 @@ class OSimulationEnv(ip.simplesim.SimulationEnv):
                 occlusions=agent_config["occlusions"], **base_agent
             )
             rolename = agent_config.get("rolename", "occluded")
-        elif agent_config["type"] == "StaticObject":
-            agent = StaticObject(**base_agent)
-            rolename = agent_config.get("rolename", "object")
         else:
             raise ValueError(f"Unsupported agent type {agent_config['type']}")
         return agent, rolename
